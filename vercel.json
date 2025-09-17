@@ -1,20 +1,10 @@
 {
   "version": 2,
   "name": "axora",
-  "builds": [
+  "rewrites": [
     {
-      "src": "downloads/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/downloads/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/downloads/index.html"
+      "source": "/(.*)",
+      "destination": "/$1"
     }
   ],
   "headers": [
