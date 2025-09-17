@@ -308,6 +308,7 @@ class AxoraApp(QMainWindow):
         history_header.setFont(header_font)
         history_layout.addWidget(history_header)
 
+
         self.history_list = QListWidget()
         self.history_list.setObjectName("historyList")
         history_layout.addWidget(self.history_list)
