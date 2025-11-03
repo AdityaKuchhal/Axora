@@ -1,8 +1,6 @@
 # Axora - Utility Bill Organizer
 
-A modern, cross-platform desktop application for organizing utility bills from Bell, Rogers, and Telus providers. Built with Python and PyQt6.
-
-![Axora Logo](axora.ico)
+A professional desktop application for organizing utility bills from Bell, Rogers, and Telus providers. Built with Python and PyQt6.
 
 ## Features
 
@@ -11,64 +9,16 @@ A modern, cross-platform desktop application for organizing utility bills from B
 - 🏢 **Multi-Provider Support**: Handles Bell, Rogers, and Telus bills seamlessly
 - 📊 **Excel Integration**: Uses Excel files to map account numbers to corporations and providers
 - 🎨 **Modern UI**: Clean, responsive interface with dark/light theme support
-- 📱 **Cross-Platform**: Works on macOS and Windows
 - 📈 **Progress Tracking**: Real-time progress updates during file organization
 - 📋 **History Logging**: Keeps track of all organization activities
 
 ## Installation
 
-### macOS
-1. Download `Axora-macOS.zip` from the [Releases](https://github.com/AdityaKuchhal/Axora/releases) page
-2. Extract the zip file
-3. Move `Axora.app` to your Applications folder
-4. Right-click and select "Open" to bypass macOS security warnings
-5. Follow the on-screen instructions
-
-### Windows
-1. Download `Axora-Windows.exe` from the [Releases](https://github.com/AdityaKuchhal/Axora/releases) page
-2. Double-click to run (no installation required)
-3. Follow the on-screen instructions
-
-## Usage
-
-1. **Prepare Excel File**: Create an Excel file with columns for Corporation, Account Number, and Provider
-2. **Select Files**: Choose your Excel mapping file and source folder containing utility bills
-3. **Choose Destination**: Select your Utilities folder where organized files will be placed
-4. **Execute**: Click the Execute button to start the organization process
-5. **Monitor Progress**: Watch the progress bar and results in real-time
-
-## File Structure
-
-The application organizes files in the following hierarchy:
-
-```
-Utilities/
-├── [Corporation Number]/
-│   ├── Bell/
-│   │   └── [Account Folder]/
-│   │       ├── 2024/
-│   │       ├── 2025/
-│   │       └── [Latest Bill]
-│   ├── Rogers/
-│   │   └── [Account Folder]/
-│   └── Telus/
-│       └── [Account Folder]/
-```
-
-## Requirements
-
-- **macOS**: 10.15 or later
-- **Windows**: Windows 10 or later
-- **Excel File**: Must contain Corporation, Account Number, and Provider columns
-
-## Development
-
-### Prerequisites
-- Python 3.11+
+### Requirements
+- Python 3.8 or later
 - PyQt6
 - pandas
 - openpyxl
-- PyInstaller
 
 ### Setup
 ```bash
@@ -77,36 +27,63 @@ git clone https://github.com/AdityaKuchhal/Axora.git
 cd Axora
 
 # Install dependencies
-pip install -r requirements_pyqt6.txt
+pip install -r requirements.txt
 
 # Run the application
-python utility_bill_organizer_pyqt6.py
+python axora.py
 ```
 
-### Building Executables
+## Usage
 
-#### macOS
-```bash
-python build_macos.py
+1. **Prepare Excel File**: Create an Excel file with provider information (BELL, TELUS, ROGERS) in the first column, followed by corporation and account details
+2. **Select Excel File**: Choose your Excel mapping file using the Browse button
+3. **Select Source**: Choose either a single PDF file or a folder containing PDF files
+4. **Choose Destination**: Select your Utilities folder where organized files will be placed
+5. **Execute**: Click the Execute button to start the organization process
+6. **Monitor Progress**: Watch the progress bar and results in real-time
+
+## File Structure
+
+The application organizes files in the following hierarchy:
+
+```
+Utilities/
+├── [Corporation]/
+│   ├── Bell/
+│   │   └── [Account]/
+│   │       ├── 2024/
+│   │       ├── 2025/
+│   │       └── [Organized Bills]
+│   ├── Rogers/
+│   │   └── [Account]/
+│   └── Telus/
+│       └── [Account]/
 ```
 
-#### Windows
-```bash
-python build_windows.py
+## How It Works
+
+- **Account Extraction**: Extracts account identifiers (last 4 digits, extensions) from PDF filenames
+- **Excel Mapping**: Matches extracted identifiers against Excel data to find corporation and provider
+- **Date Extraction**: Extracts dates from filenames to organize by year
+- **Smart Organization**: Creates organized folder structure and renames files chronologically
+
+## Development
+
+### Prerequisites
+- Python 3.8+
+- PyQt6
+- pandas
+- openpyxl
+
+### Project Structure
 ```
-
-#### Both Platforms
-```bash
-python build_all.py
+Axora/
+├── axora.py              # Main application file
+├── requirements.txt      # Python dependencies
+├── README.md             # This file
+├── LICENSE               # MIT License
+└── builds/               # Build scripts
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 
@@ -116,21 +93,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Aditya Kuchhal**
 - GitHub: [@AdityaKuchhal](https://github.com/AdityaKuchhal)
-- Email: [Your Email]
-
-## Acknowledgments
-
-- Built with [PyQt6](https://www.riverbankcomputing.com/software/pyqt/)
-- Icons and UI inspired by modern design principles
-- Special thanks to the Python community for excellent libraries
-
-## Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/AdityaKuchhal/Axora/issues) page
-2. Create a new issue with detailed information
-3. Contact the author directly
 
 ---
 
