@@ -15,12 +15,14 @@ A professional desktop application for organizing utility bills from Bell, Roger
 ## Installation
 
 ### Requirements
+
 - Python 3.8 or later
 - PyQt6
 - pandas
 - openpyxl
 
 ### Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/AdityaKuchhal/Axora.git
@@ -70,12 +72,14 @@ Utilities/
 ## Development
 
 ### Prerequisites
+
 - Python 3.8+
 - PyQt6
 - pandas
 - openpyxl
 
 ### Project Structure
+
 ```
 Axora/
 ├── axora.py              # Main application file
@@ -92,6 +96,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Author
 
 **Aditya Kuchhal**
+
 - GitHub: [@AdityaKuchhal](https://github.com/AdityaKuchhal)
 
 ---
