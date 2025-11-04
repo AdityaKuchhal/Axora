@@ -12,14 +12,14 @@ def install_pyinstaller():
     """Install PyInstaller if not already installed"""
     try:
         import PyInstaller
-        print("✅ PyInstaller already installed")
+        print("[OK] PyInstaller already installed")
     except ImportError:
-        print("📦 Installing PyInstaller...")
+        print("[*] Installing PyInstaller...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
 
 def build_windows_exe():
     """Build Windows executable"""
-    print("🔨 Building Windows executable...")
+    print("[*] Building Windows executable...")
     
     # Clean previous builds
     if os.path.exists("build"):
@@ -47,31 +47,31 @@ def build_windows_exe():
     
     try:
         subprocess.run(cmd, check=True)
-        print("✅ Windows executable created successfully!")
-        print("📁 Output: dist/Axora.exe")
+        print("[OK] Windows executable created successfully!")
+        print("[*] Output: dist/Axora.exe")
         return True
         
     except subprocess.CalledProcessError as e:
-        print(f"❌ Build failed: {e}")
+        print(f"[ERROR] Build failed: {e}")
         return False
 
 def main():
     """Main build process"""
-    print("🚀 Building Axora for Windows...")
-    print("⚠️  Note: This script should be run on a Windows machine")
+    print("[*] Building Axora for Windows...")
+    print("[!] Note: This script should be run on a Windows machine")
     
     # Install PyInstaller
     install_pyinstaller()
     
     # Build executable
     if build_windows_exe():
-        print("\n🎉 Build completed successfully!")
-        print("📦 Your Windows executable is ready:")
-        print("   - dist/Axora.exe")
-        print("\n💡 Note: This is a single executable file that includes all dependencies.")
-        print("   Users can run it directly without installing Python.")
+        print("\n[SUCCESS] Build completed successfully!")
+        print("[*] Your Windows executable is ready:")
+        print("    - dist/Axora.exe")
+        print("\n[INFO] Note: This is a single executable file that includes all dependencies.")
+        print("    Users can run it directly without installing Python.")
     else:
-        print("\n❌ Build failed. Check the error messages above.")
+        print("\n[ERROR] Build failed. Check the error messages above.")
 
 if __name__ == "__main__":
     main()
