@@ -84,10 +84,12 @@ class FileOrganizerWorker(QThread):
                 self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
                 
                 try:
-                    result, skip_reason = self.organizer.process_single_file(source_dir, self.dest_root, file_name)
+                    result, message = self.organizer.process_single_file(source_dir, self.dest_root, file_name)
                     if result:
                         moved += 1
-                    elif skip_reason == "not_found":
+                        # message contains the hierarchy path
+                        self.progress_updated.emit(f"✅ MOVED '{file_name}' -> {message}")
+                    elif message == "not_found":
                         not_found += 1
                         self.progress_updated.emit(f"NOT FOUND '{file_name}': Account not found in Excel")
                     else:
@@ -623,7 +625,9 @@ class AxoraApp(QMainWindow):
             return False, "skipped"
 
         shutil.move(src_path, dest_file_path)
-        return True, ""
+        # Return hierarchy path for display
+        hierarchy_path = f"{corp} -> {provider.capitalize()} -> {account_folder_name} -> {year_folder} -> {final_name}"
+        return True, hierarchy_path
 
     def extract_account_tokens(self, file_name: str) -> tuple[str, str]:
         base = os.path.splitext(file_name)[0]
