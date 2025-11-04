@@ -622,7 +622,7 @@ class AxoraApp(QMainWindow):
         if os.path.exists(dest_file_path):
             return False, "skipped"
 
-        shutil.copy2(src_path, dest_file_path)
+        shutil.move(src_path, dest_file_path)
         return True, ""
 
     def extract_account_tokens(self, file_name: str) -> tuple[str, str]:
