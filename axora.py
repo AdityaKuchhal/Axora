@@ -725,11 +725,14 @@ class AxoraApp(QMainWindow):
     def extract_date_targets(self, file_name: str) -> tuple[str, str, str]:
         name, ext = os.path.splitext(file_name)
 
-        # Priority 1: Date after dash in YYYYMMDD format (8 digits after dash)
+        # Priority 1: Date after LAST dash in YYYYMMDD format (8 digits after dash, starting with 19 or 20)
         # Format 1: "4163627475  136-20251025" or Format 2: "532892345-20251025"
-        m_dash_compact = re.search(r"-(\d{4})(\d{2})(\d{2})", name)
-        if m_dash_compact:
-            yyyy, mm, dd = m_dash_compact.group(1), m_dash_compact.group(2), m_dash_compact.group(3)
+        # Find all matches and use the last one (date should be at the end)
+        all_dash_matches = list(re.finditer(r"-(19|20)(\d{2})(\d{2})(\d{2})", name))
+        if all_dash_matches:
+            m_dash_compact = all_dash_matches[-1]  # Use the last match (date should be at the end)
+            yyyy_prefix, yy, mm, dd = m_dash_compact.group(1), m_dash_compact.group(2), m_dash_compact.group(3), m_dash_compact.group(4)
+            yyyy = f"{yyyy_prefix}{yy}"
         else:
             # Priority 2: Try YYYY-MM-DD format (with dashes)
             m_full = re.search(r"(\d{4})-(\d{2})-(\d{2})", name)
