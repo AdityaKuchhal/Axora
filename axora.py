@@ -632,40 +632,56 @@ class AxoraApp(QMainWindow):
     def extract_account_tokens(self, file_name: str) -> tuple[str, str]:
         base = os.path.splitext(file_name)[0]
 
-        # Extract extension first
+        # Extract extension first - try multiple formats
         ext = ""
+        
+        # Format 1: Extension in parentheses (xxx)
         ext_match = re.search(r"\(([^)]+)\)", base)
         if ext_match:
             ext_candidate = ext_match.group(1).strip()
             if re.match(r"^[\dA-Za-z]{2,6}$", ext_candidate):
                 ext = ext_candidate
         else:
-            space_ext = re.search(r"\s+(\d{3,4})\s*$", base)
-            if space_ext:
-                ext = space_ext.group(1)
+            # Format 2: Spaces + digits + dash (e.g., "   877-", "   190-")
+            space_dash_ext = re.search(r"\s+(\d{2,4})-", base)
+            if space_dash_ext:
+                ext_candidate = space_dash_ext.group(1).strip()
+                if re.match(r"^\d{2,4}$", ext_candidate):
+                    ext = ext_candidate
+            else:
+                # Format 3: Space-separated extension at end
+                space_ext = re.search(r"\s+(\d{3,4})\s*$", base)
+                if space_ext:
+                    ext = space_ext.group(1)
 
-        # Remove date patterns
+        # Remove date patterns (including YYYYMMDD format)
         base_for_last4 = re.sub(r"_\d{4}-\d{2}-\d{2}", "", base)
         base_for_last4 = re.sub(r"_\d{2}-\d{2}-\d{2}", "", base_for_last4)
         base_for_last4 = re.sub(r"\d{4}-\d{2}-\d{2}", "", base_for_last4)
         base_for_last4 = re.sub(r"\d{2}-\d{2}-\d{2}", "", base_for_last4)
+        # Remove YYYYMMDD format (dates that start with 19 or 20)
+        base_for_last4 = re.sub(r"-(\d{4})(\d{2})(\d{2})", "", base_for_last4)  # Remove dash + YYYYMMDD
+        base_for_last4 = re.sub(r"(19|20)\d{6}", "", base_for_last4)  # Remove dates starting with 19xx or 20xx
 
         if ext:
             base_for_last4 = re.sub(r"\([^)]+\)", "", base_for_last4)
+            # Remove extension with spaces and dash format
+            base_for_last4 = re.sub(r"\s+" + re.escape(ext) + r"-", "", base_for_last4)
             base_for_last4 = re.sub(r"\s+" + re.escape(ext) + r"\s*", "", base_for_last4)
 
-        # Find phone numbers
+        # Find phone numbers (10 digits or 9 digits)
         phone_patterns = [
             r"(\d{3}\s+\d{3}\s+\d{4})",
             r"(\d{3}-\d{3}-\d{4})",
             r"(\d{10})",
+            r"(\d{9})",  # Support 9-digit phone numbers
         ]
         for pattern in phone_patterns:
             phone_match = re.search(pattern, base_for_last4)
             if phone_match:
                 phone_str = phone_match.group(1)
                 phone_digits = re.sub(r"\D", "", phone_str)
-                if len(phone_digits) == 10:
+                if len(phone_digits) in [9, 10]:
                     match_start = phone_match.start()
                     if match_start == 0 or not base_for_last4[match_start - 1].isalnum():
                         return phone_digits[-4:], ext
@@ -709,15 +725,23 @@ class AxoraApp(QMainWindow):
     def extract_date_targets(self, file_name: str) -> tuple[str, str, str]:
         name, ext = os.path.splitext(file_name)
 
+        # Try YYYY-MM-DD format first
         m_full = re.search(r"(\d{4})-(\d{2})-(\d{2})", name)
         if m_full:
             yyyy, mm, dd = m_full.group(1), m_full.group(2), m_full.group(3)
         else:
+            # Try YY-MM-DD format
             m_short = re.search(r"(\d{2})-(\d{2})-(\d{2})", name)
-            if not m_short:
-                return "", "", ""
-            yy, mm, dd = m_short.group(1), m_short.group(2), m_short.group(3)
-            yyyy = f"20{yy}"
+            if m_short:
+                yy, mm, dd = m_short.group(1), m_short.group(2), m_short.group(3)
+                yyyy = f"20{yy}"
+            else:
+                # Try YYYYMMDD format (8 digits, no dashes)
+                m_compact = re.search(r"(\d{4})(\d{2})(\d{2})", name)
+                if m_compact:
+                    yyyy, mm, dd = m_compact.group(1), m_compact.group(2), m_compact.group(3)
+                else:
+                    return "", "", ""
 
         final_name = f"{yyyy[2:]}-{mm}-{dd}{ext}"
         return f"{yyyy}-{mm}-{dd}", yyyy, final_name
