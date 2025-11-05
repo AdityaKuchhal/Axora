@@ -725,21 +725,22 @@ class AxoraApp(QMainWindow):
     def extract_date_targets(self, file_name: str) -> tuple[str, str, str]:
         name, ext = os.path.splitext(file_name)
 
-        # Try YYYY-MM-DD format first
-        m_full = re.search(r"(\d{4})-(\d{2})-(\d{2})", name)
-        if m_full:
-            yyyy, mm, dd = m_full.group(1), m_full.group(2), m_full.group(3)
+        # Priority 1: Date after dash in YYYYMMDD format (8 digits after dash)
+        # Format 1: "4163627475  136-20251025" or Format 2: "532892345-20251025"
+        m_dash_compact = re.search(r"-(\d{4})(\d{2})(\d{2})", name)
+        if m_dash_compact:
+            yyyy, mm, dd = m_dash_compact.group(1), m_dash_compact.group(2), m_dash_compact.group(3)
         else:
-            # Try YY-MM-DD format
-            m_short = re.search(r"(\d{2})-(\d{2})-(\d{2})", name)
-            if m_short:
-                yy, mm, dd = m_short.group(1), m_short.group(2), m_short.group(3)
-                yyyy = f"20{yy}"
+            # Priority 2: Try YYYY-MM-DD format (with dashes)
+            m_full = re.search(r"(\d{4})-(\d{2})-(\d{2})", name)
+            if m_full:
+                yyyy, mm, dd = m_full.group(1), m_full.group(2), m_full.group(3)
             else:
-                # Try YYYYMMDD format (8 digits, no dashes)
-                m_compact = re.search(r"(\d{4})(\d{2})(\d{2})", name)
-                if m_compact:
-                    yyyy, mm, dd = m_compact.group(1), m_compact.group(2), m_compact.group(3)
+                # Priority 3: Try YY-MM-DD format
+                m_short = re.search(r"(\d{2})-(\d{2})-(\d{2})", name)
+                if m_short:
+                    yy, mm, dd = m_short.group(1), m_short.group(2), m_short.group(3)
+                    yyyy = f"20{yy}"
                 else:
                     return "", "", ""
 
