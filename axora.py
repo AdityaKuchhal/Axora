@@ -68,14 +68,23 @@ class FileOrganizerWorker(QThread):
         try:
             self.progress_updated.emit("Initializing...")
             
+            # Validate source path exists
+            if not os.path.exists(self.source_path):
+                self.error_occurred.emit(f"Source path does not exist: {self.source_path}")
+                return
+            
             # Handle source as file or folder
             pdf_files = []
-            if os.path.isfile(self.source_path):
-                if self.source_path.lower().endswith('.pdf'):
-                    pdf_files = [(os.path.dirname(self.source_path) or ".", os.path.basename(self.source_path))]
-            elif os.path.isdir(self.source_path):
-                files = [f for f in os.listdir(self.source_path) if os.path.isfile(os.path.join(self.source_path, f))]
-                pdf_files = [(self.source_path, f) for f in files if f.lower().endswith('.pdf')]
+            try:
+                if os.path.isfile(self.source_path):
+                    if self.source_path.lower().endswith('.pdf'):
+                        pdf_files = [(os.path.dirname(self.source_path) or ".", os.path.basename(self.source_path))]
+                elif os.path.isdir(self.source_path):
+                    files = [f for f in os.listdir(self.source_path) if os.path.isfile(os.path.join(self.source_path, f))]
+                    pdf_files = [(self.source_path, f) for f in files if f.lower().endswith('.pdf')]
+            except Exception as e:
+                self.error_occurred.emit(f"Error reading source path: {str(e)}")
+                return
             
             total = len(pdf_files)
             if total == 0:
@@ -98,7 +107,11 @@ class FileOrganizerWorker(QThread):
                         # message contains the hierarchy path
                         self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
                         # Extract file data for Excel update
-                        file_data = self.organizer.get_file_data_for_excel(file_name, message)
+                        try:
+                            file_data = self.organizer.get_file_data_for_excel(file_name, message)
+                        except Exception as ex:
+                            # If extraction fails, use empty dict
+                            file_data = {}
                         self.file_completed.emit(file_name, message, file_data)
                     elif message == "not_found":
                         not_found += 1
@@ -123,7 +136,9 @@ class FileOrganizerWorker(QThread):
             })
             
         except Exception as e:
-            self.error_occurred.emit(str(e))
+            import traceback
+            error_details = f"{str(e)}\n\n{traceback.format_exc()}"
+            self.error_occurred.emit(error_details)
 
 
 # ------------------------------ Main App ------------------------------
@@ -970,7 +985,9 @@ class AxoraApp(QMainWindow):
         self.progress_bar.setValue(0)
 
         self.statusBar().showMessage("Organization failed")
-        QMessageBox.critical(self, "Error", f"File organization failed:\n{error_message}")
+        # Show first 500 chars of error to avoid huge dialogs
+        error_display = error_message[:500] + "..." if len(error_message) > 500 else error_message
+        QMessageBox.critical(self, "Error", f"File organization failed:\n{error_display}")
 
     # ---------- Results / History / Info ----------
 
@@ -1290,10 +1307,15 @@ def main():
     app.setApplicationVersion("2.3")
     app.setOrganizationName("AK Realm")
 
-    window = AxoraApp()
-    window.show()
-
-    sys.exit(app.exec())
+    try:
+        window = AxoraApp()
+        window.show()
+        sys.exit(app.exec())
+    except Exception as e:
+        import traceback
+        error_msg = f"Fatal error: {str(e)}\n\n{traceback.format_exc()}"
+        QMessageBox.critical(None, "Fatal Error", error_msg)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
