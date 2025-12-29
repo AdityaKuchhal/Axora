@@ -428,6 +428,15 @@
             .container {
                 padding: 0 1rem;
             }
+
+            /* What's New Banner Responsive */
+            section[style*="background: linear-gradient"] h2 {
+                font-size: 1.5rem !important;
+            }
+
+            section[style*="background: linear-gradient"] p {
+                font-size: 1rem !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -474,6 +483,7 @@
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
                 <li><a href="#download">Download</a></li>
+                <li><a href="#changelog">What's New</a></li>
                 <li><a href="#about">About</a></li>
             </ul>
         </nav>
@@ -495,6 +505,32 @@
                 <a href="#features" class="btn btn-secondary">
                     📋 Learn More
                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's New Banner -->
+    <section style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 2rem 0;">
+        <div class="container">
+            <div style="text-align: center; max-width: 900px; margin: 0 auto; padding: 0 2rem;">
+                <div style="display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 20px; margin-bottom: 1rem; font-weight: 600; font-size: 0.9rem;">
+                    🎉 NEW RELEASE
+                </div>
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">Version 2.2 is Here!</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 1.5rem; opacity: 0.95;">
+                    Introducing <strong>Organized Results Display</strong> - View your file organization results in beautifully categorized sections with tree-style hierarchy visualization.
+                </p>
+                <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 12px; text-align: left; max-width: 700px; margin: 0 auto;">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        ✨ What's New:
+                    </h3>
+                    <ul style="list-style: none; padding: 0; line-height: 2;">
+                        <li style="margin-bottom: 0.75rem;">📊 <strong>Categorized Results:</strong> Separate sections for Completed, Skipped, and Not Found files</li>
+                        <li style="margin-bottom: 0.75rem;">🌳 <strong>Tree-Style Hierarchy:</strong> Visual folder structure display for completed files</li>
+                        <li style="margin-bottom: 0.75rem;">📈 <strong>Dynamic Counts:</strong> Real-time counts in section headers</li>
+                        <li style="margin-bottom: 0.75rem;">🎨 <strong>Improved Clarity:</strong> Much cleaner and easier to read results display</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
@@ -530,6 +566,12 @@
                     <div class="feature-icon">⚡</div>
                     <h3>Batch Processing</h3>
                     <p>Process hundreds of files at once with progress tracking, detailed logs, and comprehensive error handling.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <div class="feature-icon">📋</div>
+                    <h3>Organized Results</h3>
+                    <p>View results in categorized sections (Completed, Skipped, Not Found) with tree-style hierarchy display for easy tracking and clarity.</p>
                 </div>
                 
                 <div class="feature-card fade-in-up">
@@ -611,6 +653,54 @@
         </div>
     </section>
 
+    <!-- Changelog Section -->
+    <section id="changelog" class="features" style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2 class="section-title">Release Notes</h2>
+            <p class="section-subtitle">
+                Stay updated with the latest improvements and features
+            </p>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <!-- Version 2.2 -->
+                <div style="background: white; border-left: 4px solid var(--secondary-color); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); font-size: 1.5rem; margin: 0;">Version 2.2</h3>
+                        <span style="background: var(--secondary-color); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Latest</span>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-style: italic;">Released: December 2024</p>
+                    
+                    <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.2rem;">✨ New Features</h4>
+                    <ul style="color: var(--text-secondary); line-height: 2; margin-bottom: 1.5rem;">
+                        <li><strong>Organized Results Display:</strong> Results are now displayed in three separate, clearly labeled sections (Completed, Skipped, Not Found)</li>
+                        <li><strong>Tree-Style Hierarchy:</strong> Completed files show a beautiful tree-style visualization of the folder structure</li>
+                        <li><strong>Dynamic Section Counts:</strong> Each section header displays real-time counts of files in that category</li>
+                    </ul>
+                    
+                    <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.2rem;">🎨 Improvements</h4>
+                    <ul style="color: var(--text-secondary); line-height: 2;">
+                        <li>Much cleaner and more readable results display</li>
+                        <li>Better visual organization of file processing outcomes</li>
+                        <li>Improved user experience when reviewing batch processing results</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.1 -->
+                <div style="background: white; border-left: 4px solid var(--primary-color); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: var(--shadow-md); opacity: 0.9;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); font-size: 1.5rem; margin: 0;">Version 2.1</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-style: italic;">Previous stable release</p>
+                    <ul style="color: var(--text-secondary); line-height: 2;">
+                        <li>Enhanced file processing capabilities</li>
+                        <li>Improved Excel mapping functionality</li>
+                        <li>Better error handling and user feedback</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- About Section -->
     <section id="about" class="features" style="background: var(--bg-primary);">
         <div class="container">
@@ -647,7 +737,7 @@
             <p>Built with ❤️ by <span class="author">Aditya Kuchhal</span></p>
             
             <div class="version-info">
-                <p>Version 2.1 | Built with PyQt6</p>
+                <p>Version 2.2 | Built with PyQt6</p>
                 <p>&copy; 2024 Aditya Kuchhal. All rights reserved.</p>
             </div>
         </div>

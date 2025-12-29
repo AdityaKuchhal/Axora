@@ -32,6 +32,7 @@ from PyQt6.QtWidgets import (
     QRadioButton,
     QButtonGroup,
     QStatusBar,
+    QScrollArea,
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -49,6 +50,10 @@ class FileOrganizerWorker(QThread):
     progress_percent = pyqtSignal(int)
     finished = pyqtSignal(dict)
     error_occurred = pyqtSignal(str)
+    # Categorized result signals
+    file_completed = pyqtSignal(str, str)  # filename, hierarchy_path
+    file_skipped = pyqtSignal(str, str)  # filename, reason
+    file_not_found = pyqtSignal(str)  # filename
 
     def __init__(self, organizer, source_path, dest_root):
         super().__init__()
@@ -88,16 +93,21 @@ class FileOrganizerWorker(QThread):
                     if result:
                         moved += 1
                         # message contains the hierarchy path
-                        self.progress_updated.emit(f"✅ MOVED '{file_name}' -> {message}")
+                        self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
+                        self.file_completed.emit(file_name, message)
                     elif message == "not_found":
                         not_found += 1
-                        self.progress_updated.emit(f"NOT FOUND '{file_name}': Account not found in Excel")
+                        self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
+                        self.file_not_found.emit(file_name)
                     else:
                         skipped += 1
-                        self.progress_updated.emit(f"SKIPPED '{file_name}': Target already exists")
+                        self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
+                        reason = "Target already exists" if message == "skipped" else str(message)
+                        self.file_skipped.emit(file_name, reason)
                 except Exception as ex:
                     skipped += 1
-                    self.progress_updated.emit(f"SKIPPED '{file_name}': {ex}")
+                    self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
+                    self.file_skipped.emit(file_name, str(ex))
             
             self.progress_percent.emit(100)
             self.finished.emit({
@@ -291,11 +301,50 @@ class AxoraApp(QMainWindow):
         results_header.setFont(header_font)
         results_layout.addWidget(results_header)
 
-        self.results_text = QTextEdit()
-        self.results_text.setObjectName("resultsText")
-        self.results_text.setReadOnly(True)
-        self.results_text.setPlaceholderText("Results will appear here...")
-        results_layout.addWidget(self.results_text)
+        # Scroll area for results sections
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setObjectName("resultsScrollArea")
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_layout.setSpacing(20)
+        scroll_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Completed section
+        self.completed_group = QGroupBox("✅ Completed (0)")
+        self.completed_group.setObjectName("resultsGroup")
+        completed_layout = QVBoxLayout(self.completed_group)
+        self.completed_list = QListWidget()
+        self.completed_list.setObjectName("resultsList")
+        self.completed_list.setSpacing(2)
+        completed_layout.addWidget(self.completed_list)
+        scroll_layout.addWidget(self.completed_group)
+
+        # Skipped section
+        self.skipped_group = QGroupBox("⚠️ Skipped (0)")
+        self.skipped_group.setObjectName("resultsGroup")
+        skipped_layout = QVBoxLayout(self.skipped_group)
+        self.skipped_list = QListWidget()
+        self.skipped_list.setObjectName("resultsList")
+        self.skipped_list.setSpacing(2)
+        skipped_layout.addWidget(self.skipped_list)
+        scroll_layout.addWidget(self.skipped_group)
+
+        # Not Found section
+        self.notfound_group = QGroupBox("❌ Not Found (0)")
+        self.notfound_group.setObjectName("resultsGroup")
+        notfound_layout = QVBoxLayout(self.notfound_group)
+        self.notfound_list = QListWidget()
+        self.notfound_list.setObjectName("resultsList")
+        self.notfound_list.setSpacing(2)
+        notfound_layout.addWidget(self.notfound_list)
+        scroll_layout.addWidget(self.notfound_group)
+
+        scroll_layout.addStretch()
+        scroll_area.setWidget(scroll_content)
+        results_layout.addWidget(scroll_area)
 
         # History tab
         self.history_tab = QWidget()
@@ -353,12 +402,27 @@ class AxoraApp(QMainWindow):
             #progressBar::chunk { background: #16a34a; border-radius: 6px; }
 
             #resultsHeader, #historyHeader { color: #0f172a; }
-            #resultsText {
-                border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;
-                background: #0b1220; color: #e5e7eb;
-                font-family: Menlo, Consolas, "Courier New", monospace; font-size: 12px;
+            
+            #resultsScrollArea { background: transparent; border: none; }
+            #resultsScrollArea QWidget { background: transparent; }
+            
+            #resultsGroup {
+                font-weight: 600; color: #0f172a; border: 1px solid #e5e7eb; border-radius: 8px;
+                margin-top: 10px; padding-top: 12px; background: #ffffff;
             }
-            #resultsText::placeholder { color: #94a3b8; }
+            #resultsGroup::title { left: 12px; padding: 0 6px; color: #334155; }
+            
+            #resultsList {
+                border: 1px solid #e5e7eb; border-radius: 6px; background: #ffffff;
+                padding: 4px; font-family: Menlo, Consolas, "Courier New", monospace; font-size: 11px;
+            }
+            #resultsList::item {
+                padding: 6px 8px; border-radius: 4px; margin: 2px 0;
+                background: #f8fafc; color: #0f172a;
+            }
+            #resultsList::item:selected {
+                background: #e0e7ff; color: #1e40af;
+            }
 
             #historyList { border: 1px solid #e5e7eb; border-radius: 8px; background: #ffffff; }
 
@@ -402,11 +466,28 @@ class AxoraApp(QMainWindow):
             #progressBar::chunk { background: #10b981; border-radius: 6px; }
 
             #resultsHeader, #historyHeader { color: #e5e7eb; }
-            #resultsText {
-                border: 1px solid #334155; border-radius: 8px; padding: 12px;
-                background: #0b1220; color: #e5e7eb;
-                font-family: Menlo, Consolas, "Courier New", monospace; font-size: 12px;
+            
+            #resultsScrollArea { background: transparent; border: none; }
+            #resultsScrollArea QWidget { background: transparent; }
+            
+            #resultsGroup {
+                font-weight: 600; color: #e5e7eb; border: 1px solid #1f2937; border-radius: 8px;
+                margin-top: 10px; padding-top: 12px; background: #0f172a;
             }
+            #resultsGroup::title { left: 12px; padding: 0 6px; color: #cbd5e1; }
+            
+            #resultsList {
+                border: 1px solid #334155; border-radius: 6px; background: #0f172a;
+                padding: 4px; font-family: Menlo, Consolas, "Courier New", monospace; font-size: 11px;
+            }
+            #resultsList::item {
+                padding: 6px 8px; border-radius: 4px; margin: 2px 0;
+                background: #111827; color: #e5e7eb;
+            }
+            #resultsList::item:selected {
+                background: #1e3a8a; color: #e0e7ff;
+            }
+            
             #historyList { border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #e5e7eb; }
 
             QStatusBar { background: #0f172a; color: #e5e7eb; }
@@ -794,7 +875,11 @@ class AxoraApp(QMainWindow):
         self.organize_btn.setText("Processing...")
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.results_text.clear()
+        
+        # Clear results
+        self.completed_list.clear()
+        self.skipped_list.clear()
+        self.notfound_list.clear()
 
         # Start worker thread
         self.worker_thread = FileOrganizerWorker(self, source_path, dest_root)
@@ -802,12 +887,15 @@ class AxoraApp(QMainWindow):
         self.worker_thread.progress_percent.connect(self.update_progress_bar)
         self.worker_thread.finished.connect(self.organization_finished)
         self.worker_thread.error_occurred.connect(self.organization_error)
+        self.worker_thread.file_completed.connect(self.add_completed_file)
+        self.worker_thread.file_skipped.connect(self.add_skipped_file)
+        self.worker_thread.file_not_found.connect(self.add_notfound_file)
         self.worker_thread.start()
 
-        self.add_result("🚀 Starting file organization...")
-
     def update_progress_text(self, message):
-        self.add_result(message)
+        # Progress messages can be shown in status bar or ignored
+        if "Processing file" in message:
+            self.statusBar().showMessage(message)
 
     def update_progress_bar(self, value):
         self.progress_bar.setValue(max(0, min(100, int(value))))
@@ -822,10 +910,8 @@ class AxoraApp(QMainWindow):
         not_found = results.get('not_found', 0)
         total = results.get('total', 0)
 
-        # Show totals at the top
-        totals_msg = f"Moved: {moved} | Skipped: {skipped} | Not Found: {not_found}"
-        current_text = self.results_text.toPlainText()
-        self.results_text.setPlainText(totals_msg + "\n" + "=" * 50 + "\n" + current_text)
+        # Update group box titles with counts
+        self.update_section_titles(moved, skipped, not_found)
 
         self.statusBar().showMessage(f"Completed. Moved: {moved}, Skipped: {skipped}, Not Found: {not_found}")
         QMessageBox.information(self, "Success", f"Files have been successfully organized!\n\nMoved: {moved}\nSkipped: {skipped}\nNot Found: {not_found}")
@@ -838,17 +924,59 @@ class AxoraApp(QMainWindow):
         self.organize_btn.setText("Execute")
         self.progress_bar.setValue(0)
 
-        self.add_result(f"❌ Organization failed: {error_message}")
         self.statusBar().showMessage("Organization failed")
         QMessageBox.critical(self, "Error", f"File organization failed:\n{error_message}")
 
     # ---------- Results / History / Info ----------
 
-    def add_result(self, message):
-        self.results_text.append(message)
-        cursor = self.results_text.textCursor()
-        cursor.movePosition(cursor.MoveOperation.End)
-        self.results_text.setTextCursor(cursor)
+    def format_tree_hierarchy(self, filename: str, hierarchy_path: str) -> str:
+        """Format hierarchy path as tree-style with arrows"""
+        # hierarchy_path format: "Corp -> Provider -> Account -> Year -> filename"
+        parts = [p.strip() for p in hierarchy_path.split(" -> ")]
+        if len(parts) < 2:
+            return filename
+        
+        lines = [filename]  # Start with filename
+        # Exclude the last part (filename) and build tree structure
+        hierarchy_parts = parts[:-1]
+        for i, part in enumerate(hierarchy_parts, start=1):
+            if i == len(hierarchy_parts):
+                # Last item
+                prefix = "    " + "    " * (i - 1) + "└─ "
+            else:
+                # Middle items
+                prefix = "    " + "    " * (i - 1) + "├─ "
+            lines.append(prefix + part)
+        
+        return "\n".join(lines)
+
+    def add_completed_file(self, filename: str, hierarchy_path: str):
+        """Add a completed file with tree-style hierarchy"""
+        formatted = self.format_tree_hierarchy(filename, hierarchy_path)
+        item = QListWidgetItem(formatted)
+        # Calculate approximate height for multi-line text (4 lines + padding)
+        item.setSizeHint(item.sizeHint().width(), 80)
+        self.completed_list.addItem(item)
+
+    def add_skipped_file(self, filename: str, reason: str):
+        """Add a skipped file"""
+        text = f"{filename}\n  Reason: {reason}"
+        item = QListWidgetItem(text)
+        item.setSizeHint(item.sizeHint().width(), 50)
+        self.skipped_list.addItem(item)
+
+    def add_notfound_file(self, filename: str):
+        """Add a not found file"""
+        text = f"{filename}\n  Reason: Account not found in Excel"
+        item = QListWidgetItem(text)
+        item.setSizeHint(item.sizeHint().width(), 50)
+        self.notfound_list.addItem(item)
+
+    def update_section_titles(self, moved: int, skipped: int, not_found: int):
+        """Update group box titles with counts"""
+        self.completed_group.setTitle(f"✅ Completed ({moved})")
+        self.skipped_group.setTitle(f"⚠️ Skipped ({skipped})")
+        self.notfound_group.setTitle(f"❌ Not Found ({not_found})")
 
     def append_history_entry(self, results: dict):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -912,7 +1040,7 @@ class AxoraApp(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Axora")
-    app.setApplicationVersion("2.1")
+    app.setApplicationVersion("2.2")
     app.setOrganizationName("AK Realm")
 
     window = AxoraApp()
