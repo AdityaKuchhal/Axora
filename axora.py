@@ -33,6 +33,9 @@ from PyQt6.QtWidgets import (
     QButtonGroup,
     QStatusBar,
     QScrollArea,
+    QSplitter,
+    QDialog,
+    QDialogButtonBox,
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -51,7 +54,7 @@ class FileOrganizerWorker(QThread):
     finished = pyqtSignal(dict)
     error_occurred = pyqtSignal(str)
     # Categorized result signals
-    file_completed = pyqtSignal(str, str)  # filename, hierarchy_path
+    file_completed = pyqtSignal(str, str, dict)  # filename, hierarchy_path, file_data
     file_skipped = pyqtSignal(str, str)  # filename, reason
     file_not_found = pyqtSignal(str)  # filename
 
@@ -94,7 +97,9 @@ class FileOrganizerWorker(QThread):
                         moved += 1
                         # message contains the hierarchy path
                         self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
-                        self.file_completed.emit(file_name, message)
+                        # Extract file data for Excel update
+                        file_data = self.organizer.get_file_data_for_excel(file_name, message)
+                        self.file_completed.emit(file_name, message, file_data)
                     elif message == "not_found":
                         not_found += 1
                         self.progress_updated.emit(f"Processing file {idx} of {total}: {file_name}")
@@ -132,6 +137,7 @@ class AxoraApp(QMainWindow):
         self.worker_thread = None
         self.is_dark = True
         self.history_items = []
+        self.completed_files_data = []  # Store completed file info for Excel update
 
         self.setup_ui()
         self.apply_dark_style()
@@ -152,18 +158,21 @@ class AxoraApp(QMainWindow):
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Content area
-        content_layout = QHBoxLayout()
-        content_layout.setSpacing(0)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addLayout(content_layout)
+        # Content area with splitter for resizable panels
+        self.splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_layout.addWidget(self.splitter)
 
         # Panels
         left_panel = self.create_controls_panel()
         right_panel = self.create_right_panel()
 
-        content_layout.addWidget(left_panel, 1)
-        content_layout.addWidget(right_panel, 1)
+        self.splitter.addWidget(left_panel)
+        self.splitter.addWidget(right_panel)
+        
+        # Set initial sizes (40% left, 60% right)
+        self.splitter.setSizes([400, 600])
+        self.splitter.setCollapsible(0, True)  # Allow collapsing left panel
+        self.splitter.setCollapsible(1, False)  # Don't allow collapsing right panel
 
         self.statusBar().showMessage("Ready to organize utility bills")
 
@@ -710,6 +719,36 @@ class AxoraApp(QMainWindow):
         hierarchy_path = f"{corp} -> {provider.capitalize()} -> {account_folder_name} -> {year_folder} -> {final_name}"
         return True, hierarchy_path
 
+    def get_file_data_for_excel(self, file_name: str, hierarchy_path: str) -> dict:
+        """Extract file data needed for Excel update"""
+        # Parse hierarchy path: "Corp -> Provider -> Account -> Year -> filename"
+        parts = [p.strip() for p in hierarchy_path.split(" -> ")]
+        if len(parts) < 3:
+            return {}
+        
+        corp = parts[0]
+        account = parts[2] if len(parts) > 2 else ""
+        
+        # Extract date from filename
+        date_str, year_folder, _ = self.extract_date_targets(file_name)
+        if not date_str:
+            return {}
+        
+        # Parse date to get month
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            month_name = date_obj.strftime("%B")  # Full month name (e.g., "September")
+        except:
+            month_name = ""
+        
+        return {
+            "corp": corp,
+            "account": account,
+            "date": date_str,
+            "month": month_name,
+            "year": year_folder
+        }
+
     def extract_account_tokens(self, file_name: str) -> tuple[str, str]:
         base = os.path.splitext(file_name)[0]
 
@@ -891,6 +930,9 @@ class AxoraApp(QMainWindow):
         self.worker_thread.file_skipped.connect(self.add_skipped_file)
         self.worker_thread.file_not_found.connect(self.add_notfound_file)
         self.worker_thread.start()
+        
+        # Clear completed files data for new execution
+        self.completed_files_data = []
 
     def update_progress_text(self, message):
         # Progress messages can be shown in status bar or ignored
@@ -918,6 +960,10 @@ class AxoraApp(QMainWindow):
 
         # Log to history
         self.append_history_entry(results)
+        
+        # Ask to update Excel file if there are completed files
+        if moved > 0 and self.completed_files_data:
+            self.prompt_excel_update()
 
     def organization_error(self, error_message):
         self.organize_btn.setEnabled(True)
@@ -950,13 +996,17 @@ class AxoraApp(QMainWindow):
         
         return "\n".join(lines)
 
-    def add_completed_file(self, filename: str, hierarchy_path: str):
+    def add_completed_file(self, filename: str, hierarchy_path: str, file_data: dict):
         """Add a completed file with tree-style hierarchy"""
         formatted = self.format_tree_hierarchy(filename, hierarchy_path)
         item = QListWidgetItem(formatted)
         # Calculate approximate height for multi-line text (4 lines + padding)
         item.setSizeHint(item.sizeHint().width(), 80)
         self.completed_list.addItem(item)
+        
+        # Store file data for Excel update
+        if file_data:
+            self.completed_files_data.append(file_data)
 
     def add_skipped_file(self, filename: str, reason: str):
         """Add a skipped file"""
@@ -1034,13 +1084,211 @@ class AxoraApp(QMainWindow):
         except Exception:
             pass
 
+    # ---------- Excel Update Integration ----------
+
+    def prompt_excel_update(self):
+        """Prompt user to upload Excel file for updating downloaded status"""
+        reply = QMessageBox.question(
+            self,
+            "Update Excel File?",
+            f"Would you like to update the Utility Excel file with 'Downloaded' status?\n\n"
+            f"{len(self.completed_files_data)} files were successfully organized.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            excel_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Select Utility Excel File",
+                "",
+                "Excel files (*.xlsx *.xls);;All files (*.*)"
+            )
+            if excel_path:
+                self.update_excel_file(excel_path)
+
+    def update_excel_file(self, excel_path: str):
+        """Update Excel file with Downloaded status for completed files"""
+        try:
+            # Read Excel file
+            df = pd.read_excel(excel_path, header=None)
+            
+            # Find column indices
+            corp_col = None
+            account_col = None
+            month_cols = {}  # month_name -> column_index
+            header_row = None
+            
+            # Search for headers (usually in row 4 or 5 based on screenshots)
+            for row_idx in range(min(10, len(df))):
+                row = df.iloc[row_idx]
+                for col_idx, cell_value in enumerate(row):
+                    if pd.isna(cell_value):
+                        continue
+                    cell_str = str(cell_value).strip().upper()
+                    
+                    # Find Corp No. column (Column B typically)
+                    if "CORP" in cell_str and ("NO" in cell_str or "NUMBER" in cell_str) and corp_col is None:
+                        corp_col = col_idx
+                        header_row = row_idx
+                    
+                    # Find Account column (Column C - "Email & Account No.")
+                    if "ACCOUNT" in cell_str and account_col is None:
+                        account_col = col_idx
+                        if header_row is None:
+                            header_row = row_idx
+                    
+                    # Find month columns (September, October, November, December)
+                    month_names = ["SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
+                    for month in month_names:
+                        if month in cell_str and month not in month_cols:
+                            month_cols[month] = col_idx
+                            if header_row is None:
+                                header_row = row_idx
+            
+            if corp_col is None:
+                QMessageBox.warning(
+                    self,
+                    "Excel Format Error",
+                    "Could not find 'Corp No.' column in the Excel file.\n"
+                    "Please ensure the Excel file has the correct format."
+                )
+                return
+            
+            if account_col is None:
+                QMessageBox.warning(
+                    self,
+                    "Excel Format Error",
+                    "Could not find 'Email & Account No.' column in the Excel file."
+                )
+                return
+            
+            if not month_cols:
+                QMessageBox.warning(
+                    self,
+                    "Excel Format Error",
+                    "Could not find month columns (September, October, November, December) in the Excel file."
+                )
+                return
+            
+            # Update rows
+            updated_count = 0
+            data_start_row = (header_row + 1) if header_row is not None else 5  # Data starts after header
+            
+            for file_data in self.completed_files_data:
+                corp = str(file_data.get("corp", "")).strip()
+                account = str(file_data.get("account", "")).strip()
+                month = file_data.get("month", "").upper()
+                
+                if not corp or not account or not month:
+                    continue
+                
+                # Extract account digits for matching
+                account_digits = ''.join(filter(str.isdigit, account))
+                if not account_digits:
+                    continue
+                
+                # Find matching row
+                for row_idx in range(data_start_row, len(df)):
+                    # Get corp value
+                    if corp_col >= len(df.columns):
+                        continue
+                    row_corp_val = df.iloc[row_idx, corp_col]
+                    if pd.isna(row_corp_val):
+                        continue
+                    row_corp = str(row_corp_val).strip()
+                    
+                    # Get account value
+                    if account_col >= len(df.columns):
+                        continue
+                    row_account_val = df.iloc[row_idx, account_col]
+                    if pd.isna(row_account_val):
+                        continue
+                    row_account = str(row_account_val).strip()
+                    
+                    # Try to match corp (numeric comparison)
+                    corp_match = False
+                    try:
+                        # Try exact string match first
+                        if corp == row_corp:
+                            corp_match = True
+                        # Try numeric match
+                        elif corp.isdigit() and row_corp.isdigit():
+                            if int(corp) == int(row_corp):
+                                corp_match = True
+                        # Try partial match (corp might be part of a longer string)
+                        elif corp in row_corp or row_corp in corp:
+                            corp_match = True
+                    except:
+                        pass
+                    
+                    if not corp_match:
+                        continue
+                    
+                    # Try to match account (extract digits and compare)
+                    account_match = False
+                    row_account_digits = ''.join(filter(str.isdigit, row_account))
+                    
+                    if account_digits and row_account_digits:
+                        # Check if account digits appear in the row account digits
+                        if account_digits in row_account_digits or row_account_digits in account_digits:
+                            account_match = True
+                        # Also check last 4 digits match (common pattern)
+                        elif len(account_digits) >= 4 and len(row_account_digits) >= 4:
+                            if account_digits[-4:] == row_account_digits[-4:]:
+                                account_match = True
+                    
+                    if corp_match and account_match:
+                        # Found matching row, update month column
+                        if month in month_cols:
+                            col_idx = month_cols[month]
+                            if col_idx < len(df.columns):
+                                # Check if already marked as Downloaded
+                                current_val = str(df.iloc[row_idx, col_idx]).strip() if not pd.isna(df.iloc[row_idx, col_idx]) else ""
+                                if current_val.upper() != "DOWNLOADED":
+                                    df.iloc[row_idx, col_idx] = "Downloaded"
+                                    updated_count += 1
+                                break
+            
+            # Save updated Excel
+            try:
+                # Create backup
+                backup_path = excel_path.replace('.xlsx', '_backup.xlsx').replace('.xls', '_backup.xls')
+                if os.path.exists(excel_path):
+                    shutil.copy2(excel_path, backup_path)
+                
+                # Save updated file
+                df.to_excel(excel_path, index=False, header=False, engine='openpyxl')
+                
+                QMessageBox.information(
+                    self,
+                    "Excel Updated",
+                    f"Excel file updated successfully!\n\n"
+                    f"Updated {updated_count} entries with 'Downloaded' status.\n"
+                    f"Backup saved as: {os.path.basename(backup_path)}"
+                )
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    "Save Error",
+                    f"Error saving Excel file:\n{str(e)}\n\n"
+                    f"Make sure the file is not open in another program."
+                )
+                
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Excel Update Error",
+                f"Error updating Excel file:\n{str(e)}"
+            )
+
 
 # ------------------------------ Entry ------------------------------
 
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Axora")
-    app.setApplicationVersion("2.2")
+    app.setApplicationVersion("2.3")
     app.setOrganizationName("AK Realm")
 
     window = AxoraApp()

@@ -516,19 +516,20 @@
                 <div style="display: inline-block; background: rgba(255, 255, 255, 0.2); padding: 0.5rem 1rem; border-radius: 20px; margin-bottom: 1rem; font-weight: 600; font-size: 0.9rem;">
                     🎉 NEW RELEASE
                 </div>
-                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">Version 2.2 is Here!</h2>
+                <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">Version 2.3 is Here!</h2>
                 <p style="font-size: 1.2rem; margin-bottom: 1.5rem; opacity: 0.95;">
-                    Introducing <strong>Organized Results Display</strong> - View your file organization results in beautifully categorized sections with tree-style hierarchy visualization.
+                    Introducing <strong>Excel Integration</strong> and <strong>Resizable Interface</strong> - Automatically update your utility tracking Excel and customize your workspace!
                 </p>
                 <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 12px; text-align: left; max-width: 700px; margin: 0 auto;">
                     <h3 style="font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         ✨ What's New:
                     </h3>
                     <ul style="list-style: none; padding: 0; line-height: 2;">
-                        <li style="margin-bottom: 0.75rem;">📊 <strong>Categorized Results:</strong> Separate sections for Completed, Skipped, and Not Found files</li>
-                        <li style="margin-bottom: 0.75rem;">🌳 <strong>Tree-Style Hierarchy:</strong> Visual folder structure display for completed files</li>
-                        <li style="margin-bottom: 0.75rem;">📈 <strong>Dynamic Counts:</strong> Real-time counts in section headers</li>
-                        <li style="margin-bottom: 0.75rem;">🎨 <strong>Improved Clarity:</strong> Much cleaner and easier to read results display</li>
+                        <li style="margin-bottom: 0.75rem;">📊 <strong>Excel Auto-Update:</strong> Automatically mark files as "Downloaded" in your Utility Excel file after organization</li>
+                        <li style="margin-bottom: 0.75rem;">🔍 <strong>Smart Matching:</strong> Intelligently matches files by Corp No. and Account No. to update the correct rows</li>
+                        <li style="margin-bottom: 0.75rem;">📅 <strong>Month Detection:</strong> Automatically detects the correct month column based on file dates</li>
+                        <li style="margin-bottom: 0.75rem;">🔧 <strong>Resizable Interface:</strong> Drag to resize or collapse the left panel for better workspace management</li>
+                        <li style="margin-bottom: 0.75rem;">💾 <strong>Auto Backup:</strong> Creates backup of Excel file before making updates for safety</li>
                     </ul>
                 </div>
             </div>
@@ -575,9 +576,21 @@
                 </div>
                 
                 <div class="feature-card fade-in-up">
+                    <div class="feature-icon">📝</div>
+                    <h3>Excel Integration</h3>
+                    <p>Automatically update your Utility Excel file with "Downloaded" status. Smart matching by Corp No. and Account No. with automatic month detection.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
                     <div class="feature-icon">🎨</div>
-                    <h3>Modern Interface</h3>
-                    <p>Clean, professional UI with dark/light themes, progress tracking, and intuitive controls for the best user experience.</p>
+                    <h3>Resizable Interface</h3>
+                    <p>Customize your workspace with resizable panels. Drag to adjust sizes or collapse the left panel for maximum screen real estate.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Reliable & Secure</h3>
+                    <p>Built with PyQt6 for stability and performance. No data leaves your computer - everything runs locally and securely.</p>
                 </div>
                 
                 <div class="feature-card fade-in-up">
@@ -603,18 +616,18 @@
                         🍎 Download for macOS
                         <span style="font-size: 0.9rem; opacity: 0.8;">(430MB)</span>
                     </a>
-                    <a href="Axora-Windows.zip" class="download-btn windows">
+                    <a href="https://github.com/AdityaKuchhal/Axora/releases/latest" target="_blank" class="download-btn windows">
                         🪟 Download for Windows
-                        <span style="font-size: 0.9rem; opacity: 0.8;">(Single File)</span>
+                        <span style="font-size: 0.9rem; opacity: 0.8;">(GitHub Releases)</span>
                     </a>
                 </div>
                 
                 <div class="requirements">
                     <h4>System Requirements</h4>
                     <p><strong>macOS:</strong> macOS 10.15 (Catalina) or later</p>
-                    <p><strong>Windows:</strong> Windows 10 or later + Python 3.8+</p>
+                    <p><strong>Windows:</strong> Windows 10 or later (standalone executable) or Windows 10+ with Python 3.8+ (for script version)</p>
                     <p><strong>Storage:</strong> 500MB free space recommended</p>
-                    <p><strong>Note:</strong> macOS version runs directly. Windows version requires Python installation.</p>
+                    <p><strong>Note:</strong> Both macOS and Windows standalone versions run directly without additional installations.</p>
                 </div>
                 
                 <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 1.5rem; margin: 2rem 0; text-align: left;">
@@ -633,19 +646,22 @@
                 <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 1.5rem; margin: 2rem 0; text-align: left;">
                     <h4 style="color: #1e40af; margin-bottom: 1rem;">🪟 Windows Users: Installation Instructions</h4>
                     <p style="color: #1e40af; margin-bottom: 1rem;">
-                        <strong>Step 1:</strong> Install Python 3.8+ from <a href="https://python.org" style="color: #1e40af; text-decoration: underline;">python.org</a>
-                        <br><small>Make sure to check "Add Python to PATH" during installation</small>
+                        <strong>Option 1 - Standalone Executable (Recommended):</strong>
+                    </p>
+                    <p style="color: #1e40af; margin-bottom: 1rem; padding-left: 1.5rem;">
+                        • Download <strong>Axora.exe</strong> from <a href="https://github.com/AdityaKuchhal/Axora/releases/latest" target="_blank" style="color: #1e40af; text-decoration: underline; font-weight: 600;">GitHub Releases</a><br>
+                        • No Python installation required - just double-click to run!
                     </p>
                     <p style="color: #1e40af; margin-bottom: 1rem;">
-                        <strong>Step 2:</strong> Download and extract Axora-Windows.zip
+                        <strong>Option 2 - Python Script:</strong>
                     </p>
-                    <p style="color: #1e40af; margin-bottom: 1rem;">
-                        <strong>Step 3:</strong> Double-click "Install.bat" to install dependencies
+                    <p style="color: #1e40af; margin-bottom: 1rem; padding-left: 1.5rem;">
+                        • Install Python 3.8+ from <a href="https://python.org" target="_blank" style="color: #1e40af; text-decoration: underline;">python.org</a><br>
+                        • Clone the repository and install dependencies:<br>
+                        <code style="background: rgba(0,0,0,0.1); padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-block; margin-top: 0.5rem;">pip install -r requirements.txt</code><br>
+                        • Run: <code style="background: rgba(0,0,0,0.1); padding: 0.25rem 0.5rem; border-radius: 4px;">python axora.py</code>
                     </p>
-                    <p style="color: #1e40af; margin-bottom: 1rem;">
-                        <strong>Step 4:</strong> Double-click "Run-Axora.bat" to start the application
-                    </p>
-                    <p style="color: #1e40af; font-size: 0.9rem;">
+                    <p style="color: #1e40af; font-size: 0.9rem; margin-top: 1rem;">
                         <strong>Note:</strong> You'll need to provide your own Excel file with account mappings
                     </p>
                 </div>
@@ -662,26 +678,41 @@
             </p>
             
             <div style="max-width: 900px; margin: 0 auto;">
-                <!-- Version 2.2 -->
+                <!-- Version 2.3 -->
                 <div style="background: white; border-left: 4px solid var(--secondary-color); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="color: var(--text-primary); font-size: 1.5rem; margin: 0;">Version 2.2</h3>
+                        <h3 style="color: var(--text-primary); font-size: 1.5rem; margin: 0;">Version 2.3</h3>
                         <span style="background: var(--secondary-color); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Latest</span>
                     </div>
                     <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-style: italic;">Released: December 2024</p>
                     
                     <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.2rem;">✨ New Features</h4>
                     <ul style="color: var(--text-secondary); line-height: 2; margin-bottom: 1.5rem;">
-                        <li><strong>Organized Results Display:</strong> Results are now displayed in three separate, clearly labeled sections (Completed, Skipped, Not Found)</li>
-                        <li><strong>Tree-Style Hierarchy:</strong> Completed files show a beautiful tree-style visualization of the folder structure</li>
-                        <li><strong>Dynamic Section Counts:</strong> Each section header displays real-time counts of files in that category</li>
+                        <li><strong>Excel Auto-Update Integration:</strong> Automatically update your Utility Excel file with "Downloaded" status after file organization</li>
+                        <li><strong>Smart Corp/Account Matching:</strong> Intelligently matches files by Corp No. and Account No. to find the correct Excel rows</li>
+                        <li><strong>Automatic Month Detection:</strong> Detects the correct month column (September, October, November, December) based on file dates</li>
+                        <li><strong>Resizable Interface:</strong> Drag to resize or collapse the left control panel for better workspace customization</li>
+                        <li><strong>Auto Backup:</strong> Creates backup of Excel file before making updates for safety</li>
                     </ul>
                     
                     <h4 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.2rem;">🎨 Improvements</h4>
                     <ul style="color: var(--text-secondary); line-height: 2;">
-                        <li>Much cleaner and more readable results display</li>
-                        <li>Better visual organization of file processing outcomes</li>
-                        <li>Improved user experience when reviewing batch processing results</li>
+                        <li>Improved workspace management with resizable panels</li>
+                        <li>Seamless Excel integration workflow</li>
+                        <li>Better user experience with automatic status tracking</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.2 -->
+                <div style="background: white; border-left: 4px solid var(--primary-color); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: var(--shadow-md); opacity: 0.9;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); font-size: 1.5rem; margin: 0;">Version 2.2</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-style: italic;">Previous release</p>
+                    <ul style="color: var(--text-secondary); line-height: 2;">
+                        <li>Organized Results Display with categorized sections</li>
+                        <li>Tree-Style Hierarchy visualization</li>
+                        <li>Dynamic section counts</li>
                     </ul>
                 </div>
 
@@ -737,7 +768,7 @@
             <p>Built with ❤️ by <span class="author">Aditya Kuchhal</span></p>
             
             <div class="version-info">
-                <p>Version 2.2 | Built with PyQt6</p>
+                <p>Version 2.3 | Built with PyQt6</p>
                 <p>&copy; 2024 Aditya Kuchhal. All rights reserved.</p>
             </div>
         </div>
