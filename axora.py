@@ -579,11 +579,10 @@ class AxoraApp(QMainWindow):
         try:
             excel_path = self.excel_path_edit.toolTip() or file_path
             self.mapping = self.build_mapping_from_excel(excel_path)
-            self.add_result(f"✅ Loaded mapping entries: {len(self.mapping)}")
-            self.statusBar().showMessage(f"Excel data loaded: {len(self.mapping)} entries")
+            self.statusBar().showMessage(f"✅ Excel data loaded: {len(self.mapping)} mapping entries")
         except Exception as e:
             error_msg = f"Error loading Excel file: {str(e)}"
-            self.add_result(f"❌ {error_msg}")
+            self.statusBar().showMessage("❌ Error loading Excel file")
             QMessageBox.critical(self, "Error", error_msg)
 
     def build_mapping_from_excel(self, excel_path: str) -> dict:
