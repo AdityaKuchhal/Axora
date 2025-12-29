@@ -917,12 +917,30 @@ class AxoraApp(QMainWindow):
             QMessageBox.warning(self, "Missing Information",
                                 "Please select Excel file, source folder, and destination folder")
             return
+        
+        # Validate paths exist
+        if not os.path.exists(excel_path):
+            QMessageBox.warning(self, "Invalid Path", f"Excel file not found: {excel_path}")
+            return
+        
+        if not os.path.exists(source_path):
+            QMessageBox.warning(self, "Invalid Path", f"Source path not found: {source_path}")
+            return
+        
+        if not os.path.exists(dest_root):
+            QMessageBox.warning(self, "Invalid Path", f"Destination folder not found: {dest_root}")
+            return
 
         if not self.mapping:
             self.load_excel_data(excel_path)
             if not self.mapping:
                 return
 
+        # Stop any existing worker thread
+        if self.worker_thread and self.worker_thread.isRunning():
+            self.worker_thread.terminate()
+            self.worker_thread.wait()
+        
         # Disable controls
         self.organize_btn.setEnabled(False)
         self.organize_btn.setText("Processing...")
@@ -933,20 +951,27 @@ class AxoraApp(QMainWindow):
         self.completed_list.clear()
         self.skipped_list.clear()
         self.notfound_list.clear()
-
-        # Start worker thread
-        self.worker_thread = FileOrganizerWorker(self, source_path, dest_root)
-        self.worker_thread.progress_updated.connect(self.update_progress_text)
-        self.worker_thread.progress_percent.connect(self.update_progress_bar)
-        self.worker_thread.finished.connect(self.organization_finished)
-        self.worker_thread.error_occurred.connect(self.organization_error)
-        self.worker_thread.file_completed.connect(self.add_completed_file)
-        self.worker_thread.file_skipped.connect(self.add_skipped_file)
-        self.worker_thread.file_not_found.connect(self.add_notfound_file)
-        self.worker_thread.start()
         
         # Clear completed files data for new execution
         self.completed_files_data = []
+
+        # Start worker thread
+        try:
+            self.worker_thread = FileOrganizerWorker(self, source_path, dest_root)
+            self.worker_thread.progress_updated.connect(self.update_progress_text)
+            self.worker_thread.progress_percent.connect(self.update_progress_bar)
+            self.worker_thread.finished.connect(self.organization_finished)
+            self.worker_thread.error_occurred.connect(self.organization_error)
+            self.worker_thread.file_completed.connect(self.add_completed_file)
+            self.worker_thread.file_skipped.connect(self.add_skipped_file)
+            self.worker_thread.file_not_found.connect(self.add_notfound_file)
+            self.worker_thread.start()
+        except Exception as e:
+            self.organize_btn.setEnabled(True)
+            self.organize_btn.setText("Execute")
+            import traceback
+            error_msg = f"Failed to start worker thread: {str(e)}\n\n{traceback.format_exc()}"
+            QMessageBox.critical(self, "Error", error_msg)
 
     def update_progress_text(self, message):
         # Progress messages can be shown in status bar or ignored
@@ -1014,29 +1039,39 @@ class AxoraApp(QMainWindow):
 
     def add_completed_file(self, filename: str, hierarchy_path: str, file_data: dict):
         """Add a completed file with tree-style hierarchy"""
-        formatted = self.format_tree_hierarchy(filename, hierarchy_path)
-        item = QListWidgetItem(formatted)
-        # Calculate approximate height for multi-line text (4 lines + padding)
-        item.setSizeHint(item.sizeHint().width(), 80)
-        self.completed_list.addItem(item)
-        
-        # Store file data for Excel update
-        if file_data:
-            self.completed_files_data.append(file_data)
+        try:
+            formatted = self.format_tree_hierarchy(filename, hierarchy_path)
+            item = QListWidgetItem(formatted)
+            # Calculate approximate height for multi-line text (4 lines + padding)
+            item.setSizeHint(item.sizeHint().width(), 80)
+            self.completed_list.addItem(item)
+            
+            # Store file data for Excel update
+            if file_data:
+                self.completed_files_data.append(file_data)
+        except Exception as e:
+            # Log error but don't crash
+            print(f"Error adding completed file to list: {e}")
 
     def add_skipped_file(self, filename: str, reason: str):
         """Add a skipped file"""
-        text = f"{filename}\n  Reason: {reason}"
-        item = QListWidgetItem(text)
-        item.setSizeHint(item.sizeHint().width(), 50)
-        self.skipped_list.addItem(item)
+        try:
+            text = f"{filename}\n  Reason: {reason}"
+            item = QListWidgetItem(text)
+            item.setSizeHint(item.sizeHint().width(), 50)
+            self.skipped_list.addItem(item)
+        except Exception as e:
+            print(f"Error adding skipped file to list: {e}")
 
     def add_notfound_file(self, filename: str):
         """Add a not found file"""
-        text = f"{filename}\n  Reason: Account not found in Excel"
-        item = QListWidgetItem(text)
-        item.setSizeHint(item.sizeHint().width(), 50)
-        self.notfound_list.addItem(item)
+        try:
+            text = f"{filename}\n  Reason: Account not found in Excel"
+            item = QListWidgetItem(text)
+            item.setSizeHint(item.sizeHint().width(), 50)
+            self.notfound_list.addItem(item)
+        except Exception as e:
+            print(f"Error adding not found file to list: {e}")
 
     def update_section_titles(self, moved: int, skipped: int, not_found: int):
         """Update group box titles with counts"""
