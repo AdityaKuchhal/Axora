@@ -37,7 +37,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize
 from PyQt6.QtGui import QFont
 
 import pandas as pd
@@ -1043,7 +1043,7 @@ class AxoraApp(QMainWindow):
             formatted = self.format_tree_hierarchy(filename, hierarchy_path)
             item = QListWidgetItem(formatted)
             # Calculate approximate height for multi-line text (4 lines + padding)
-            item.setSizeHint(item.sizeHint().width(), 80)
+            item.setSizeHint(QSize(-1, 80))  # -1 means use default width
             self.completed_list.addItem(item)
             
             # Store file data for Excel update
@@ -1058,7 +1058,7 @@ class AxoraApp(QMainWindow):
         try:
             text = f"{filename}\n  Reason: {reason}"
             item = QListWidgetItem(text)
-            item.setSizeHint(item.sizeHint().width(), 50)
+            item.setSizeHint(QSize(-1, 50))  # -1 means use default width
             self.skipped_list.addItem(item)
         except Exception as e:
             print(f"Error adding skipped file to list: {e}")
@@ -1068,7 +1068,7 @@ class AxoraApp(QMainWindow):
         try:
             text = f"{filename}\n  Reason: Account not found in Excel"
             item = QListWidgetItem(text)
-            item.setSizeHint(item.sizeHint().width(), 50)
+            item.setSizeHint(QSize(-1, 50))  # -1 means use default width
             self.notfound_list.addItem(item)
         except Exception as e:
             print(f"Error adding not found file to list: {e}")
